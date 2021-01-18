@@ -137,11 +137,15 @@ try
         
     % 1. Preprocess Data, AF detection, create Windows Indexes 
     error_flag = 'Data Preprocessing or AF detection failure';
-    [NN, tNN, tWin, AFWindows,out] = PreparDataForHRVAnlysis(rr,t,ann,sqi,HRVparams,subID);
+    [NN, tNN, tWin, tWinStart, tWinEnd, AFWindows,out] = PreparDataForHRVAnlysis(rr,t,ann,sqi,HRVparams,subID);
     error_flag = []; % clean error flag since preprocessing done
     
-    HRVout = [tWin' (tWin+HRVparams.windowlength)'];
-    HRVtitle = {'t_start' 't_end'};
+    HRVout = [tWin' (tWin+HRVparams.windowlength)' tWinStart' tWinEnd'];
+    HRVtitle = {'start' 'end' 't_start' 't_end'};
+    
+    % Add the other time data: 
+    % HRVout = [ts' te']; 
+    % HRVout = {}; 
    
     % 3. Calculate time domain HRV metrics - Using HRV Toolbox for PhysioNet 
     %    Cardiovascular Signal Toolbox Toolbox Functions        
@@ -289,13 +293,13 @@ end % end of HRV analysis
 end %== function ================================================================
 %
 
-function [NN, tNN, tWin,AFWindows,out] = PreparDataForHRVAnlysis(rr,t,annotations,sqi,HRVparams,subjectID)
+function [NN, tNN, tWin, tWinStart, tWinEnd, AFWindows,out] = PreparDataForHRVAnlysis(rr,t,annotations,sqi,HRVparams,subjectID)
 
     out = []; % Struct used to save DFA and MSE preprocessed data
  
     % Exclude undesiderable data from RR series (i.e., arrhytmia, low SQI, ectopy, artefact, noise)
     [NN, tNN] = RRIntervalPreprocess(rr,t,annotations, HRVparams);  
-    tWin = CreateWindowRRintervals(tNN, NN, HRVparams);    % Create Windows for Time and Frequency domain 
+    [tWin, tWinStart, tWinEnd] = CreateWindowRRintervals(tNN, NN, HRVparams);    % Create Windows for Time and Frequency domain 
     
     % Create Windows for MSE and DFA and preprocess
     if HRVparams.MSE.on || HRVparams.DFA.on

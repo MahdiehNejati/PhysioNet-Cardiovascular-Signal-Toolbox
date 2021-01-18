@@ -1,4 +1,4 @@
-function windowRRintervals = CreateWindowRRintervals(tNN, NN, HRVparams,option)
+function [windowRRintervals, windowRRintervals_starttime, windowRRintervals_endtime] = CreateWindowRRintervals(tNN, NN, HRVparams,option)
 %
 % windowRRintervals = CreateWindowRRintervals(NN, tNN, settings, options)
 %   
@@ -88,6 +88,8 @@ overlap = windowlength-increment;   % number of overlapping elements
 Nwinds = fix((nx-overlap)/(windowlength-overlap));    % number of sliding windows
 % Initialize output matrix
 windowRRintervals = (0:(Nwinds-1))*(windowlength-overlap);  % starting index of each windows
+windowRRintervals_starttime = zeros(1,Nwinds); 
+windowRRintervals_endtime = zeros(1,Nwinds); 
 
 % Initialize loop variables
 t_window_start = 0;     % Window Start Time
@@ -127,6 +129,12 @@ if ~strcmp(option,'af') && ~strcmp(option,'sqi')
 
         % Increment time by sliding segment length (sec)
         t_window_start = t_window_start + increment;
+        
+        % store the actual starting time 
+        windowRRintervals_starttime(i) = t_win(1); 
+        windowRRintervals_endtime(i) = t_win(end); 
+        
+        c(i) = t_win(end);
 
         % Check Actual Window Length and mark windows that do not meet the
         % crieria for Adequate Window Length
@@ -141,6 +149,8 @@ if ~strcmp(option,'af') && ~strcmp(option,'sqi')
         truelength = sum(nn_win(:));
         if truelength < (windowlength * (1-win_tol))
                 windowRRintervals(i) = NaN; 
+                windowRRintervals_starttime(i) = NaN; 
+                windowRRintervals_endtime(i) = NaN; 
         end
 
         % Increment loop index
